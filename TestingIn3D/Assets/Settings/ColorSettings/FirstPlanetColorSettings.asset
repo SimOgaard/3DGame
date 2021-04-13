@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e7d61d747c791b41ad34ab9f572102c, type: 3}
+  m_Name: FirstPlanetColorSettings
+  m_EditorClassIdentifier: 
+  planetType: 0
+  firstPlanet:
+    celestialBodyMaterial: {fileID: 0}
+    ocean:
+      oceanMaterial: {fileID: 0}
+      OceanDeep: {r: 0, g: 0.07369982, b: 0.254717, a: 0}
+      OceanShallow: {r: 0, g: 0.764977, b: 1, a: 0}
+      OceanRadius: 7.75
+      DepthMultiplier: 3
+      AlphaMultiplier: 8.39
+      Smoothness: 0.95
+    shore:
+      DryShoreColor: {r: 1, g: 0.98510426, b: 0.7877358, a: 1}
+      DampShoreColor: {r: 0.9433962, g: 0.9248206, b: 0.6541474, a: 1}
+      DryShoreHeightAboveWater: 0.02
+      DampShoreHeightAboveWater: 0.02
+      OceanBlend: 1
+      ShoreBlend: 0.075
+    biomes:
+      BiomeALow: {r: 0, g: 0.91372555, b: 0.27058825, a: 0}
+      BiomeAHigh: {r: 0.10065861, g: 0.735849, b: 0.2887622, a: 0}
+      BiomeHeightAboveShore: 0.1
+      FlatColBlend: 0.15
+    mountains:
+      MountainLow: {r: 0.5943396, g: 0.4100934, b: 0.19904771, a: 0}
+      MountainHigh: {r: 0.3301887, g: 0.21132077, b: 0, a: 0}
+      MaxFlatHeight: 100
+      MountainTopBlend: 0
+      SteepnessThresholdLow: 0.15
+      SteepnessThresholdHigh: 0.4
+      MountainBlend: 1
+      HighUpMountainSteepnessDistribution: 0
+  secondPlanet:
+    celestialBodyMaterial: {fileID: 0}
+    ocean:
+      oceanMaterial: {fileID: 0}
+      OceanDeep: {r: 1, g: 1, b: 1, a: 1}
+      OceanShallow: {r: 1, g: 1, b: 1, a: 1}
+      OceanRadius: 0
+      DepthMultiplier: 0
+      AlphaMultiplier: 0
+      Smoothness: 0
+  moon:
+    celestialBodyMaterial: {fileID: 0}
+    normalMap:
+      NormalMapTexture: {fileID: 2800000, guid: a5e8e224c6bcfa04e9f066a8707e1ad3,
+        type: 3}
+      BlendSharpness: 1
+      ScaleNormalMap: 1
+  sun:
+    celestialBodyMaterial: {fileID: 0}
+    SunColor1: {r: 0, g: 0, b: 0, a: 0}
+    SunColor2: {r: 0, g: 0, b: 0, a: 0}
+    Frequency: 0
+    SunNoiseSpeed: 0

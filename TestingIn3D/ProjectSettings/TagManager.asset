@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - tree
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - Player
+  - CelestialBody
+  - CelestialBody0
+  - CelestialBody1
+  - CelestialBody2
+  - CelestialBody3
+  - CelestialBody4
+  - CelestialBody5
+  - CelestialBody6
+  - CelestialBody7
+  - CelestialBody8
+  - CelestialBody9
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
