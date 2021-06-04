@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class StarScript : MonoBehaviour
 {
+    [Header("Limits material usage to singular")]
+    public bool optimize;
+    public bool rotateStars;
+
     public StarSettings starSettings;
     [HideInInspector]
     public bool starSettingsFoldout = true;
@@ -31,7 +35,13 @@ public class StarScript : MonoBehaviour
             Random.InitState(starSettings.seed);
             CreateStars();
             PlaceStars();
+
             RenderMyMesh();
+
+            if (optimize)
+            {
+                CombineStars();
+            }
         }
     }
 
@@ -64,6 +74,7 @@ public class StarScript : MonoBehaviour
 
             Color randColor = starSettings.spectrum.Evaluate(Random.Range(0f, 1f));
             childMeshComponent.GetComponent<MeshRenderer>().material.SetColor("_EmissionColor", randColor);
+            //childMeshComponent.isStatic = true;
         }
     }
 
@@ -107,7 +118,35 @@ public class StarScript : MonoBehaviour
 
             vectors[i] = newVec;
             triangles[i] = newTri;
+        }
+    }
 
+    private void CombineStars()
+    {
+        MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>();
+        CombineInstance[] combine = new CombineInstance[meshFilters.Length - 1];
+
+        transform.GetComponent<MeshRenderer>().sharedMaterial = starSettings.starMaterial;
+
+        int i = 1;
+        while (i < meshFilters.Length)
+        {
+            combine[i - 1].mesh = meshFilters[i].sharedMesh;
+            combine[i - 1].transform = meshFilters[i].transform.localToWorldMatrix;
+            //meshFilters[i].gameObject.SetActive(false);
+
+            i++;
+        }
+        transform.GetComponent<MeshFilter>().mesh = new Mesh()
+        {
+            indexFormat = UnityEngine.Rendering.IndexFormat.UInt32
+        };
+        transform.GetComponent<MeshFilter>().mesh.CombineMeshes(combine);
+        //transform.gameObject.SetActive(true);
+
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
         }
     }
 
@@ -126,8 +165,11 @@ public class StarScript : MonoBehaviour
         }
     }
 
-    public void SetMaterial()
+    public void RotateStars(Vector3 normal)
     {
-
+        if (optimize && rotateStars)
+        {
+            transform.rotation = Quaternion.LookRotation(normal);
+        }
     }
 }

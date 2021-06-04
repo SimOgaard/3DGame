@@ -27,6 +27,7 @@ public class TerrainSettings
     [System.Serializable]
     public class CreaterNoiseSettings
     {
+        public bool randomizeOnStart;
         public int seed = 1337;
 
         public int numCreaters = 1;
@@ -73,6 +74,9 @@ public class TerrainSettings
             [System.Serializable]
             public class General
             {
+                public bool randomizeOnStart;
+                public int seed = 1337;
+
                 public float amplitude = 0.1f;
                 public Vector3 offsett;
 
@@ -86,7 +90,6 @@ public class TerrainSettings
                 public float smoothingMax;
 
                 public bool invert = false;
-                public int seed = 1337;
             }
 
             [System.Serializable]

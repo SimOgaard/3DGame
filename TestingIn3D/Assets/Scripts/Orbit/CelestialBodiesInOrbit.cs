@@ -5,63 +5,143 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class CelestialBodiesInOrbit : MonoBehaviour
 {
+    [TextArea]
+    public string Notes = "";
+
     [Header("Simulate")]
-    public bool simulateOrbit = false;
-    public int stepAmount = 0;
-    public float stepSize = 0;
-    public bool resetPos = false;
+    [SerializeField]
+    private bool simulateOrbit = false;
+    [SerializeField]
+    private int stepAmount = 0;
+    [SerializeField]
+    private float stepSize = 0;
+    [SerializeField]
+    private bool resetPos = false;
 
     private TrailRenderer[] trails;
 
     [Header("Fysics")]
     public float gravitationalConstant = 6.67408e-11f;
+    [SerializeField]
+    private float timeUpdateMultiplier = 0.000001f;
 
     [Header("celestialBodies")]
-    public Vector3[] currentVelocities;
-    public CelestialBodyManager[] celestialBodyManagers;
-    public Transform[] transforms;
-    private int childrenAmount = 0;
+    public Transform currentPlanetTransform;
 
-    [Header("Player")]
-    PlayerGravity playerGravity;
+    private SunLight sunLight;
+    private Transform sunTransform;
+    private GameObject enemySpawner;
 
-    public void Start()
+    private Vector3[] currentVelocities;
+
+    private CelestialBodyManager[] celestialBodyManagers;
+    private CelestialBodyOrbit[] celestialBodyOrbits;
+    private Transform[] transforms;
+    private int childrenAmount;
+
+    private OceanEffects oceanEffects;
+
+    private Transform lastPlanetTransform;
+
+    public void Awake()
     {
-        if (GameObject.Find("Player"))
-        {
-            playerGravity = GameObject.Find("Player").GetComponent<PlayerGravity>();
-        }
+        childrenAmount = transform.childCount;
+        enemySpawner = GameObject.Find("Enemies");
+        oceanEffects = GameObject.Find("Main Camera").GetComponent<OceanEffects>();
+        sunTransform = GameObject.Find("Sun").transform;
+        sunLight = GameObject.Find("Sun").transform.Find("Directional Light").GetComponent<SunLight>();
 
-        celestialBodyManagers = new CelestialBodyManager[transform.childCount];
+        celestialBodyManagers = new CelestialBodyManager[childrenAmount];
+        celestialBodyOrbits = new CelestialBodyOrbit[childrenAmount];
+        trails = new TrailRenderer[childrenAmount];
+        transforms = new Transform[childrenAmount];
+        currentVelocities = new Vector3[childrenAmount];
 
-        trails = new TrailRenderer[transform.childCount];
-        transforms = new Transform[transform.childCount];
-        currentVelocities = new Vector3[transform.childCount];
+        int i = 0;
         foreach (Transform child in transform)
         {
-            if (transform == child.parent)
+            celestialBodyManagers[i] = child.gameObject.GetComponent<CelestialBodyManager>();
+            transforms[i] = child;
+            if (Application.isPlaying)
             {
-                celestialBodyManagers[childrenAmount] = child.gameObject.GetComponent<CelestialBodyManager>();
-                if (Application.isPlaying)
-                {
-                    transforms[childrenAmount] = child;
-                    child.Find("Trail").gameObject.SetActive(false);
-                }
-                else
-                {
-                    transforms[childrenAmount] = child;
-                    trails[childrenAmount] = child.Find("Trail").GetComponent<TrailRenderer>();
-                    currentVelocities[childrenAmount] = celestialBodyManagers[childrenAmount].sphereSettings.initialVelocity;
-                }
+                celestialBodyManagers[i].InitCelestialBody(this);
+                celestialBodyManagers[i].CreateUndetailedMesh();
+                celestialBodyManagers[i].SpawnTeleporter();
+                child.Find("Trail").gameObject.SetActive(false);
+            }
+            else
+            {
+                currentVelocities[i] = celestialBodyManagers[i].sphereSettings.initialVelocity;
+                trails[i] = child.Find("Trail").GetComponent<TrailRenderer>();
+            }
+            celestialBodyOrbits[i] = celestialBodyManagers[i].celestialBodyOrbit;
 
-                childrenAmount++;
+            i++;
+        }
+        if (Application.isPlaying)
+        {
+            OnShaderChange();
+        }
+    }
+
+    public void OnChangePlanet(Transform newPlanet)
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        if (enemySpawner != null)
+        {
+            enemySpawner.GetComponent<EnemySpawner>().StartSpawning();
+        }
+
+        sunLight.SetCullingMask(newPlanet);
+        Vector3 newPlanetVelocity = newPlanet.GetComponent<CelestialBodyManager>().celestialBodyOrbit.currentVel;
+        Vector3 startPoint = currentPlanetTransform.position;
+
+        newPlanet.GetComponent<CelestialBodyManager>().CreateDetailedMesh();
+        //newPlanet.GetComponent<CelestialBodyManager>().ShowDetailedMesh();
+        newPlanet.GetComponent<CelestialBodyManager>().ProjectFauna();
+        newPlanet.GetComponent<CelestialBodyManager>().MakeStatic();
+        newPlanet.Find("TeleporterRange(Clone)").GetComponent<TeleporterBehaviour>().enabled = true;
+
+        if (lastPlanetTransform != null)
+        {
+            // creates a bunch of erros cuzz it tries to combine fauna with the mesh
+            lastPlanetTransform.GetComponent<CelestialBodyManager>().InitCelestialBody(this);
+            lastPlanetTransform.GetComponent<CelestialBodyManager>().CreateUndetailedMesh();
+            lastPlanetTransform.GetComponent<CelestialBodyManager>().SpawnTeleporter();
+            lastPlanetTransform.GetComponent<CelestialBodyManager>().HideDetailedMesh();
+        }
+
+        for (int i = 0; i < childrenAmount; i++)
+        {
+            if (transforms[i] == currentPlanetTransform)
+            {
+                celestialBodyManagers[i].MakeStatic();
+            }
+            else
+            {
+                celestialBodyManagers[i].DisableStatic(startPoint);
+                currentVelocities[i] = celestialBodyOrbits[i].currentVel - newPlanetVelocity;
             }
         }
+
+        //OnShaderChange();
+        // --- \\
+        lastPlanetTransform = newPlanet;
+        // --- \\
+    }
+
+    public void OnShaderChange()
+    {
+        oceanEffects.SetMaterial(celestialBodyManagers, sunLight);
     }
 
     void Update()
     {
-        if (Application.isEditor && !Application.isPlaying)
+        if (!Application.isPlaying)
         {
             if (simulateOrbit)
             {
@@ -83,14 +163,17 @@ public class CelestialBodiesInOrbit : MonoBehaviour
                 }
             }
         }
-    }
+        else
+        {
+            UpdateVelocity(Time.deltaTime * timeUpdateMultiplier);
+        }
 
-    private void FixedUpdate()
-    {
-        UpdateVelocity(Time.deltaTime / 10000f);
-        //UpdateVelocity(Time.deltaTime / 1000f);
-        //UpdateVelocity(Time.deltaTime / 100f);
-        //UpdateVelocity(0);
+        // --- \\
+        if (lastPlanetTransform != currentPlanetTransform)
+        {
+            OnChangePlanet(currentPlanetTransform);
+        }
+        // --- \\
     }
 
     void TakeStep(float timeStep)
@@ -111,12 +194,13 @@ public class CelestialBodiesInOrbit : MonoBehaviour
             {
                 transforms[i].position += currentVelocities[i] * timeStep;
             }
-            //            trails[i].AddPosition(transforms[i].position);
         }
     }
 
     public void UpdateVelocity(float timeStep)
     {
+        Vector3 startPlanetTransformVelocity = Vector3.zero;
+
         for (int i = 0; i < childrenAmount; i++)
         {
             for (int q = 0; q < childrenAmount; q++)
@@ -126,20 +210,38 @@ public class CelestialBodiesInOrbit : MonoBehaviour
                     float sqrDist = (transforms[q].position - transforms[i].position).sqrMagnitude;
                     Vector3 forceDir = (transforms[q].position - transforms[i].position).normalized;
                     Vector3 acceleration = forceDir * gravitationalConstant * celestialBodyManagers[q].sphereSettings.mass / sqrDist;
-                    celestialBodyManagers[i].celestialBodyOrbit.currentVelocity += acceleration * timeStep;
+
+                    if (transforms[i] == currentPlanetTransform)
+                    {
+                        celestialBodyOrbits[i].currentVel += acceleration * timeStep;
+                        startPlanetTransformVelocity += acceleration * timeStep;
+                    }
+                    else
+                    {
+                        celestialBodyOrbits[i].currentVel += acceleration * timeStep;
+                        currentVelocities[i] += acceleration * timeStep;
+                    }
                 }
             }
-            if (transforms[i].name != "Sun")
-            {
-                celestialBodyManagers[i].celestialBodyOrbit.UpdatePosition(timeStep, transforms[i], celestialBodyManagers[i].oceanMaterial);
-            }
-//            Debug.Log(celestialBodyManagers[i].celestialBodyOrbit.currentVelocity);
         }
-        //playerGravity.updatePlayerVelocity(Time.deltaTime / 5000f);
 
-        if (GameObject.Find("Player"))
+        for (int i = 0; i < childrenAmount; i++)
         {
-            playerGravity.UpdatePlayerVelocity(timeStep);
+            if (transforms[i] != currentPlanetTransform)
+            {
+                currentVelocities[i] -= startPlanetTransformVelocity;
+                celestialBodyManagers[i].celestialBodyOrbit.UpdatePosition(timeStep, transforms[i], currentVelocities[i]);
+            }
         }
+
+        Vector4[] sunDirs = new Vector4[sunLight.celestialBodyManagers.Length];
+        Vector4[] planetCentre = new Vector4[sunLight.celestialBodyManagers.Length];
+        for (int i = 0; i < sunLight.celestialBodyManagers.Length; i++)
+        {
+            sunDirs[i] = -(Quaternion.LookRotation(sunLight.celestialBodyManagers[i].transform.position - sunTransform.position, sunLight.celestialBodyManagers[i].transform.forward) * Vector3.forward);
+            planetCentre[i] = sunLight.celestialBodyManagers[i].transform.position;
+        }
+
+        oceanEffects.UpdateOceans(sunDirs, planetCentre);
     }
 }

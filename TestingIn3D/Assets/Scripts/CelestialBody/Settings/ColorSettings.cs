@@ -19,16 +19,22 @@ public class ColorSettings : ScriptableObject
         [HideInInspector]
         public Material celestialBodyMaterial;
         public Ocean ocean;
+        public Atmosphere atmosphere;
         public Shore shore;
         public Biomes biomes;
         public Mountains mountains;
 
         [System.Serializable]
+        public class Triplanar
+        {
+            public float BlendSharpness;
+            public float ScaleNormalMap;
+            public Texture2D NormalMap;
+        }
+
+        [System.Serializable]
         public class Ocean
         {
-            [HideInInspector]
-            public Material oceanMaterial;
-
             public Color OceanDeep = new Color(1f, 1f, 1f, 1f);
             public Color OceanShallow = new Color(1f, 1f, 1f, 1f);
 
@@ -39,10 +45,31 @@ public class ColorSettings : ScriptableObject
 
             [Range(0,1)]
             public float Smoothness;
+
+            public bool SelfGlow;
+
+            public float WaveSpeed;
+            public Texture2D WaveNormalA;
+            public Texture2D WaveNormalB;
+            public float WaveNormalScale;
+            [Range(0, 1)]
+            public float WaveStrength;
+            public Color SpecularCol;
         }
 
         [System.Serializable]
-        public class Shore
+        public class Atmosphere
+        {
+            public float atmosphereRadius;
+            public int numInScatteringPoints;
+            public int numOpticalDepthPoints;
+            public Vector3 scatteringCoefficients;
+            public float scatteringStrength;
+            public float densityFalloff;
+        }
+
+        [System.Serializable]
+        public class Shore : Triplanar
         {
             public Color DryShoreColor = new Color(1f, 1f, 1f, 1f);
             public Color DampShoreColor = new Color(1f, 1f, 1f, 1f);
@@ -58,7 +85,7 @@ public class ColorSettings : ScriptableObject
         }
 
         [System.Serializable]
-        public class Biomes
+        public class Biomes : Triplanar
         {
             public Color BiomeALow = new Color(1f, 1f, 1f, 1f);
             public Color BiomeAHigh = new Color(1f, 1f, 1f, 1f);
@@ -87,7 +114,7 @@ public class ColorSettings : ScriptableObject
         }
 
         [System.Serializable]
-        public class Mountains
+        public class Mountains : Triplanar
         {
             public Color MountainLow = new Color(1f, 1f, 1f, 1f);
             public Color MountainHigh = new Color(1f, 1f, 1f, 1f);
@@ -110,13 +137,11 @@ public class ColorSettings : ScriptableObject
         [HideInInspector]
         public Material celestialBodyMaterial;
         public Ocean ocean;
+        public Atmosphere atmosphere;
 
         [System.Serializable]
         public class Ocean
         {
-            [HideInInspector]
-            public Material oceanMaterial;
-
             public Color OceanDeep = new Color(1f, 1f, 1f, 1f);
             public Color OceanShallow = new Color(1f, 1f, 1f, 1f);
 
@@ -127,6 +152,27 @@ public class ColorSettings : ScriptableObject
 
             [Range(0, 1)]
             public float Smoothness;
+
+            public bool SelfGlow;
+
+            public float WaveSpeed;
+            public Texture2D WaveNormalA;
+            public Texture2D WaveNormalB;
+            public float WaveNormalScale;
+            [Range(0, 1)]
+            public float WaveStrength;
+            public Color SpecularCol;
+        }
+
+        [System.Serializable]
+        public class Atmosphere
+        {
+            public float atmosphereRadius;
+            public int numInScatteringPoints;
+            public int numOpticalDepthPoints;
+            public Vector3 scatteringCoefficients;
+            public float scatteringStrength;
+            public float densityFalloff;
         }
     }
 
@@ -154,10 +200,8 @@ public class ColorSettings : ScriptableObject
         [HideInInspector]
         public Material celestialBodyMaterial;
 
-        public Color SunColor1 = new Color(1f, 1f, 1f, 1f);
-        public Color SunColor2 = new Color(1f, 1f, 1f, 1f);
-
-        public float Frequency = 2;
-        public float SunNoiseSpeed = 10;
+        public Color _SunColorUndertone = new Color(1f, 1f, 1f, 1f);
+        public Color _SunColorMidtone = new Color(1f, 1f, 1f, 1f);
+        public Color _SunColorOvertone = new Color(1f, 1f, 1f, 1f);
     }
 }

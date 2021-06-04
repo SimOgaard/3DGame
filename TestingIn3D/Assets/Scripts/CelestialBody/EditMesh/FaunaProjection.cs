@@ -21,22 +21,26 @@ public class FaunaProjection
             faunaFilters[i] = FaunaFactory.CreateFauna(faunaSettings.faunaLayers[i].faunaTerrainSettings, planetGameObject, i);
         }
 
+        if (!faunaSettings.enabled)
+        {
+            return;
+        }
+
         Vector3[][] copiedPoints = new Vector3[20][];
         for (int i = 0; i < 20; i++)
         {
             copiedPoints[i] = (Vector3[])CelestialBodyManager.vectors[i].Clone();
-
         }
 
         for (int i = 0; i < faunaFilters.Length; i++)
         {
-            faunaFilters[i].PlaceFauna(copiedPoints, oceanRadSquared, layer);
+            faunaFilters[i].PlaceFauna(copiedPoints, oceanRadSquared, layer, faunaSettings.enabled);
         }
     }
 
     public interface IFaunaFilter
     {
-        void PlaceFauna(Vector3[][] points, float oceanRadSquared, int layer);
+        void PlaceFauna(Vector3[][] points, float oceanRadSquared, int layer, bool enabled);
     }
 
     public static class FaunaFactory
@@ -60,13 +64,15 @@ public class FaunaProjection
         GameObject planetGameObject;
         GameObject[] planetGameObjectChildren = new GameObject[20];
         int filterIndex;
+        int dateTimeSeed = 0;
 
         public CustomTrees(FaunaTerrainSettings.TreesSettings customTrees, GameObject planetGameObject, int filterIndex)
         {
             this.customTrees = customTrees;
             this.filterIndex = filterIndex;
             this.planetGameObject = planetGameObject.transform.Find("AllMeshes").gameObject;
-            
+            dateTimeSeed = System.DateTime.Now.Millisecond;
+
             for (int i = 0; i < 20; i++)
             {
                 if (this.planetGameObject.transform.Find("Mesh_" + i).transform.Find("customTrees_" + filterIndex) == null)
@@ -79,13 +85,22 @@ public class FaunaProjection
                 }
                 else
                 {
-                    planetGameObjectChildren[i] = this.planetGameObject.transform.Find("Mesh_" + i).transform.Find("customTrees_" + filterIndex).gameObject;
+                    Object.Destroy(this.planetGameObject.transform.Find("Mesh_" + i).transform.Find("customTrees_" + filterIndex).gameObject);
+
+                    Transform parent = this.planetGameObject.transform.Find("Mesh_" + i);
+                    planetGameObjectChildren[i] = new GameObject();
+                    planetGameObjectChildren[i].name = "customTrees_" + filterIndex;
+                    planetGameObjectChildren[i].transform.parent = parent;
+                    planetGameObjectChildren[i].transform.localPosition = Vector3.zero;
+
+                    //planetGameObjectChildren[i] = this.planetGameObject.transform.Find("Mesh_" + i).transform.Find("customTrees_" + filterIndex).gameObject;
                 }
             }
         }
 
-        public void PlaceFauna(Vector3[][] points, float oceanRadSquared, int layer)
+        public void PlaceFauna(Vector3[][] points, float oceanRadSquared, int layer, bool enabled)
         {
+            /*
             for (int i = 0; i < 20; i++)
             {
                 foreach (Transform child in planetGameObjectChildren[i].transform)
@@ -93,13 +108,14 @@ public class FaunaProjection
                     Object.Destroy(child.gameObject);
                 }
             }
+            */
 
-            if (!customTrees.enabled)
+            if (!customTrees.enabled || !enabled)
             {
                 return;
             }
 
-            Random.InitState(customTrees.seed);
+            Random.InitState(customTrees.randomizeOnStart ? dateTimeSeed : customTrees.seed);
 
             float BiasFunction(float t, float bias)
             {
@@ -125,7 +141,9 @@ public class FaunaProjection
                 scale = Mathf.Clamp(scale, customTrees.minMaxScale.x, customTrees.minMaxScale.y);
                 Vector3 scaleAll = new Vector3(scale, scale, scale);
 
-                GameObject instancedObj = GameObject.Instantiate(customTrees.fauna, point + planetGameObject.transform.position - point.normalized * customTrees.plantationDepth, Quaternion.LookRotation(point.normalized, Vector3.up)) as GameObject;
+                GameObject instancedObj = GameObject.Instantiate(customTrees.fauna);
+                instancedObj.transform.localPosition = point + planetGameObject.transform.position - (point.normalized * customTrees.plantationDepth);
+                instancedObj.transform.localRotation = Quaternion.LookRotation(point.normalized, Vector3.up);
                 instancedObj.layer = layer;
                 instancedObj.transform.Find("leaf").gameObject.layer = layer;
                 instancedObj.transform.parent = planetGameObjectChildren[meshIndex].transform;

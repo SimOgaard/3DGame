@@ -10,7 +10,7 @@ public class TerrainProjectionGPU
 
     //public Texture2D[] noiseSampleTexture2D;
 
-    public TerrainProjectionGPU(ShapeSettings shapeSettings, SphereSettings sphereSettings, ref Texture2D[] noiseTextures)
+    public TerrainProjectionGPU(ShapeSettings shapeSettings, SphereSettings sphereSettings, ref Texture2D[] noiseTextures, int time)
     {
         this.shapeSettings = shapeSettings;
         noiseFilters = new ITerrainFilter[shapeSettings.noiseLayers.Length];
@@ -18,7 +18,7 @@ public class TerrainProjectionGPU
 
         for (int i = 0; i < noiseFilters.Length; i++)
         {
-            noiseFilters[i] = TerrainFilterFactory.CreateNoiseFilter(shapeSettings.noiseLayers[i].terrainSettings);
+            noiseFilters[i] = TerrainFilterFactory.CreateNoiseFilter(shapeSettings.noiseLayers[i].terrainSettings, time);
         }
 
         for (int q = 0; q < 20; q++)
@@ -49,14 +49,14 @@ public class TerrainProjectionGPU
 
     public static class TerrainFilterFactory
     {
-        public static ITerrainFilter CreateNoiseFilter(TerrainSettings terrainSettings)
+        public static ITerrainFilter CreateNoiseFilter(TerrainSettings terrainSettings, int time)
         {
             switch (terrainSettings.filterType)
             {
                 case TerrainSettings.FilterType.Custom:
-                    return new CustomNoise(terrainSettings.customNoiseSettings);
+                    return new CustomNoise(terrainSettings.customNoiseSettings, time);
                 case TerrainSettings.FilterType.Creater:
-                    return new Creators(terrainSettings.createrNoiseSettings);
+                    return new Creators(terrainSettings.createrNoiseSettings, time);
             }
             return null;
         }
@@ -159,10 +159,11 @@ public class TerrainProjectionGPU
             public float smoothness;
         }
 
-        public Creators(TerrainSettings.CreaterNoiseSettings createrSettings)
+        public Creators(TerrainSettings.CreaterNoiseSettings createrSettings, int time)
         {
             this.createrSettings = createrSettings;
-            Random.InitState(createrSettings.seed);
+
+            Random.InitState(createrSettings.randomizeOnStart ? time : createrSettings.seed);
 
             float BiasFunction(float t, float bias)
             {
@@ -234,11 +235,13 @@ public class TerrainProjectionGPU
         TerrainSettings.CustomNoiseSettings customNoiseSettings;
         FastNoiseLite noise;
         ComputeShader compute;
+        int dateTimeSeed = 0;
 
-        public CustomNoise(TerrainSettings.CustomNoiseSettings customNoiseSettings)
+        public CustomNoise(TerrainSettings.CustomNoiseSettings customNoiseSettings, int time)
         {
             this.customNoiseSettings = customNoiseSettings;
-            noise = new FastNoiseLite(customNoiseSettings.noise.general.seed);
+            dateTimeSeed = time;
+            noise = new FastNoiseLite(customNoiseSettings.noise.general.randomizeOnStart ? dateTimeSeed : customNoiseSettings.noise.general.seed);
 
             noise.SetFrequency(customNoiseSettings.noise.generalNoise.frequency);
             noise.SetNoiseType(customNoiseSettings.noise.generalNoise.noiseType);
@@ -326,7 +329,7 @@ public class TerrainProjectionGPU
             }
             compute.SetBool("_invert", customNoiseSettings.general.invert);
 
-            compute.SetInt("_seed", customNoiseSettings.general.seed);
+            compute.SetInt("_seed", customNoiseSettings.general.randomizeOnStart ? dateTimeSeed : customNoiseSettings.general.seed);
             compute.SetFloat("_frequency", customNoiseSettings.generalNoise.frequency);
             compute.SetInt("_rotationType3D", (int)customNoiseSettings.generalNoise.rotationType3D);
 

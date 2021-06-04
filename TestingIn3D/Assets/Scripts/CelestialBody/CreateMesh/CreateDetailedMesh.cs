@@ -23,20 +23,33 @@ public class CreateDetailedMesh
 
         vectorsSimple = createSampleIcosahedron.getVectors();
         trianglesSimple = createSampleIcosahedron.getTriangles();
-
-        CreateDetailedTriangles();
     }
 
     public void CreateDetailedTriangles()
     {
+        resolution = 1;
+        switch (this.sphereSettings.resolution)
+        {
+            case SphereSettings.Resolution.MaxRes:
+                resolution = 200;
+                break;
+            case SphereSettings.Resolution.MediumRes:
+                resolution = 50;
+                break;
+            case SphereSettings.Resolution.LowRes:
+                resolution = 20;
+                break;
+            case SphereSettings.Resolution.customResolution:
+                resolution = this.sphereSettings.customResolution;
+                break;
+        }
+
         for (int i = 0; i < 20; i++)
         {
             int q = i * 3;
             Vector3 v0 = vectorsSimple[trianglesSimple[q]];
             Vector3 v1 = vectorsSimple[trianglesSimple[q + 1]];
             Vector3 v2 = vectorsSimple[trianglesSimple[q + 2]];
-
-            resolution = sphereSettings.resolution; // change this r dependent on how far away you are and if you are able to see this face
 
             icosahedronFace.CreateNewDetailedFace(v0, v1, v2, 0, resolution);
 

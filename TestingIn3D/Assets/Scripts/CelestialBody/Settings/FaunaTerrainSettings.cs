@@ -14,6 +14,7 @@ public class FaunaTerrainSettings
     public class SharedSettings
     {
         public bool enabled = true;
+        public bool randomizeOnStart;
         public int seed = 1337;
         public int amount = 10;
         public float bias = 1;

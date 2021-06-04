@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 701cfd3e6f53b5740a9343d568deea7e, type: 3}
   m_Name: FlatSphereSettings
   m_EditorClassIdentifier: 
-  resolution: 50
+  resolution: 3
+  customResolution: 50
   planetRadius: 10
   mass: 1e+20
   initialVelocity: {x: 0, y: 0, z: 0}

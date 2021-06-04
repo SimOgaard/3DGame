@@ -6,6 +6,7 @@ using UnityEngine;
 public class FaunaSettings : ScriptableObject
 {
     public FaunaLayer[] faunaLayers;
+    public bool enabled;
 
     [System.Serializable]
     public class FaunaLayer
